@@ -35,7 +35,7 @@ def fetch_and_create_checkins():
         print("Unexpected response format:", data)
         return
 
-    log_type_toggle = "IN" 
+    log_type_toggle = "IN"
 
     for log in logs:
         employee_field_value = log.get("UserId")  
@@ -46,6 +46,17 @@ def fetch_and_create_checkins():
         except ValueError as e:
             frappe.msgprint(f"Timestamp format error: {e}")
             print(f"Timestamp format error: {e}")
+            continue
+
+        # Check for existing log entry
+        existing_log = frappe.get_value("Employee Checkin", {
+            "employee_field_value": employee_field_value,
+            "time": formatted_timestamp
+        })
+
+        if existing_log:
+            print(f"Duplicate log found for EmployeeID: {employee_field_value} at {formatted_timestamp}. Skipping entry.")
+            frappe.msgprint(f"Duplicate log found for EmployeeID: {employee_field_value} at {formatted_timestamp}. Skipping entry.")
             continue
 
         payload = {
