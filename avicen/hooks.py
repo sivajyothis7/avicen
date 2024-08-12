@@ -150,6 +150,15 @@ app_license = "mit"
 # 		"avicen.tasks.monthly"
 # 	],
 # }
+# custom_app_name/hooks.py
+
+scheduler_events = {
+    "cron": {
+       "0 */2 * * *": [
+            "avicen.api.fetch_and_create_checkins"
+        ]
+    }
+}
 
 # Testing
 # -------
