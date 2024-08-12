@@ -35,7 +35,7 @@ def fetch_and_create_checkins():
         print("Unexpected response format:", data)
         return
 
-    log_type_toggle = "OUT" 
+    log_type_toggle = "IN" 
 
     for log in logs:
         employee_field_value = log.get("UserId")  
@@ -71,7 +71,7 @@ def fetch_and_create_checkins():
             print(f"Failed to create Employee Checkin for EmployeeID: {employee_field_value}. Error:", e)
             frappe.msgprint(f"Failed to create Employee Checkin for EmployeeID: {employee_field_value}. Error: {e}")
 
-        log_type_toggle = "IN" if log_type_toggle == "OUT" else "OUT"
+        log_type_toggle = "OUT" if log_type_toggle == "IN" else "IN"
 
     print("Process completed.")
     frappe.msgprint("Process completed.")
