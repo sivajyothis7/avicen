@@ -154,7 +154,7 @@ app_license = "mit"
 
 scheduler_events = {
     "cron": {
-       "0 */2 * * *": [
+       "0 */3 * * *": [
             "avicen.api.fetch_and_create_checkins"
         ]
     }
