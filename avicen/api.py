@@ -48,8 +48,8 @@ def fetch_and_create_checkins():
             print(f"Timestamp format error: {e}")
             continue
 
-        # Check for existing log entry
-        existing_log = frappe.get_value("Employee Checkin", {
+        # Check for existing log entry for the employee
+        existing_log = frappe.db.exists("Employee Checkin", {
             "employee_field_value": employee_field_value,
             "time": formatted_timestamp
         })
