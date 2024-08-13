@@ -35,35 +35,45 @@ def fetch_and_create_checkins():
         print("Unexpected response format:", data)
         return
 
-    log_type_toggle = "IN"
-
+    logs_dict = {}
+    
+    # Organize logs by EmployeeId and keep the latest entry
     for log in logs:
-        employee_field_value = log.get("UserId")  
+        employee_id = log.get("UserId")
         timestamp = log.get("LogDate")
+        if employee_id and timestamp:
+            try:
+                formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
+                if employee_id not in logs_dict or formatted_timestamp > logs_dict[employee_id]['timestamp']:
+                    logs_dict[employee_id] = {
+                        'timestamp': formatted_timestamp,
+                        'log_type': "IN" if len(logs_dict) == 0 else "OUT"  # Default to "IN" for the first log
+                    }
+            except ValueError as e:
+                frappe.msgprint(f"Timestamp format error: {e}")
+                print(f"Timestamp format error: {e}")
+                continue
 
-        try:
-            formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
-        except ValueError as e:
-            frappe.msgprint(f"Timestamp format error: {e}")
-            print(f"Timestamp format error: {e}")
-            continue
+    for employee_id, log_info in logs_dict.items():
+        formatted_timestamp = log_info['timestamp']
+        log_type = log_info['log_type']
 
         # Check for existing log entry for the employee
         existing_log = frappe.db.exists("Employee Checkin", {
-            "employee_field_value": employee_field_value,
+            "employee_field_value": employee_id,
             "time": formatted_timestamp
         })
 
         if existing_log:
-            print(f"Duplicate log found for EmployeeID: {employee_field_value} at {formatted_timestamp}. Skipping entry.")
-            frappe.msgprint(f"Duplicate log found for EmployeeID: {employee_field_value} at {formatted_timestamp}. Skipping entry.")
+            print(f"Duplicate log found for EmployeeID: {employee_id} at {formatted_timestamp}. Skipping entry.")
+            frappe.msgprint(f"Duplicate log found for EmployeeID: {employee_id} at {formatted_timestamp}. Skipping entry.")
             continue
 
         payload = {
-            "employee_field_value": employee_field_value,
+            "employee_field_value": employee_id,
             "timestamp": formatted_timestamp,
             "employee_fieldname": "attendance_device_id",
-            "log_type": log_type_toggle
+            "log_type": log_type
         }
 
         try:
@@ -76,13 +86,11 @@ def fetch_and_create_checkins():
                 data=json.dumps(payload),
             )
             frappe_response.raise_for_status()
-            print(f"Employee Checkin created successfully for EmployeeID: {employee_field_value}")
-            frappe.msgprint(f"Employee Checkin created successfully for EmployeeID: {employee_field_value}")
+            print(f"Employee Checkin created successfully for EmployeeID: {employee_id}")
+            frappe.msgprint(f"Employee Checkin created successfully for EmployeeID: {employee_id}")
         except requests.exceptions.RequestException as e:
-            print(f"Failed to create Employee Checkin for EmployeeID: {employee_field_value}. Error:", e)
-            frappe.msgprint(f"Failed to create Employee Checkin for EmployeeID: {employee_field_value}. Error: {e}")
-
-        log_type_toggle = "OUT" if log_type_toggle == "IN" else "IN"
+            print(f"Failed to create Employee Checkin for EmployeeID: {employee_id}. Error:", e)
+            frappe.msgprint(f"Failed to create Employee Checkin for EmployeeID: {employee_id}. Error: {e}")
 
     print("Process completed.")
     frappe.msgprint("Process completed.")
