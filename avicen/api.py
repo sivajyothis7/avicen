@@ -36,8 +36,7 @@ def fetch_and_create_checkins():
         return
 
     logs_dict = {}
-    
-    # Organize logs by EmployeeId and keep the latest entry
+
     for log in logs:
         employee_id = log.get("UserId")
         timestamp = log.get("LogDate")
@@ -45,9 +44,12 @@ def fetch_and_create_checkins():
             try:
                 formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
                 if employee_id not in logs_dict or formatted_timestamp > logs_dict[employee_id]['timestamp']:
+                    previous_log_type = logs_dict[employee_id]['log_type'] if employee_id in logs_dict else None
+                    log_type = "OUT" if previous_log_type == "IN" else "IN"
+
                     logs_dict[employee_id] = {
                         'timestamp': formatted_timestamp,
-                        'log_type': "IN" if len(logs_dict) == 0 else "OUT"  # Default to "IN" for the first log
+                        'log_type': log_type
                     }
             except ValueError as e:
                 frappe.msgprint(f"Timestamp format error: {e}")
@@ -58,7 +60,6 @@ def fetch_and_create_checkins():
         formatted_timestamp = log_info['timestamp']
         log_type = log_info['log_type']
 
-        # Check for existing log entry for the employee
         existing_log = frappe.db.exists("Employee Checkin", {
             "employee_field_value": employee_id,
             "time": formatted_timestamp
