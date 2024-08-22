@@ -46,7 +46,7 @@ def fetch_and_create_checkins():
                 
                 if employee_id in logs_dict:
                     previous_log_type = logs_dict[employee_id]['log_type']
-                    log_type = "OUT" if previous_log_type == "IN" else "IN"
+                    log_type = "IN" if previous_log_type == "OUT" else "OUT"
                 else:
                     log_type = "IN"  
 
