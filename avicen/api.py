@@ -1,7 +1,7 @@
 import frappe
 import requests
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 
 @frappe.whitelist()
 def fetch_and_create_checkins():
@@ -43,14 +43,17 @@ def fetch_and_create_checkins():
         if employee_id and timestamp:
             try:
                 formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
-                if employee_id not in logs_dict or formatted_timestamp > logs_dict[employee_id]['timestamp']:
-                    previous_log_type = logs_dict[employee_id]['log_type'] if employee_id in logs_dict else None
+                
+                if employee_id in logs_dict:
+                    previous_log_type = logs_dict[employee_id]['log_type']
                     log_type = "OUT" if previous_log_type == "IN" else "IN"
+                else:
+                    log_type = "IN"  # Default to IN for the first entry
 
-                    logs_dict[employee_id] = {
-                        'timestamp': formatted_timestamp,
-                        'log_type': log_type
-                    }
+                logs_dict[employee_id] = {
+                    'timestamp': formatted_timestamp,
+                    'log_type': log_type
+                }
             except ValueError as e:
                 frappe.msgprint(f"Timestamp format error: {e}")
                 print(f"Timestamp format error: {e}")
