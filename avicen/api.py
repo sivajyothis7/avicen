@@ -5,14 +5,16 @@ from datetime import datetime, timedelta
 
 @frappe.whitelist()
 def fetch_and_create_checkins():
-    yesterday = datetime.today().strftime('%Y-%m-%d')
-    
+    today = datetime.today()
+    from_date = (today - timedelta(days=1)).replace(hour=2, minute=0, second=0, microsecond=0).strftime('%Y-%m-%d %H:%M:%S')
+    to_date = today.replace(hour=1, minute=59, second=59, microsecond=999999).strftime('%Y-%m-%d %H:%M:%S')
+
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
     biometric_params = {
         "APIKey": "375211082407",
         "AccountName": "ALWANEES",
-        "FromDate": yesterday,
-        "ToDate": yesterday
+        "FromDate": from_date,
+        "ToDate": to_date
     }
 
     try:
@@ -43,14 +45,22 @@ def fetch_and_create_checkins():
         if employee_id and timestamp:
             try:
                 formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
-                if employee_id not in logs_dict or formatted_timestamp > logs_dict[employee_id]['timestamp']:
-                    previous_log_type = logs_dict[employee_id]['log_type'] if employee_id in logs_dict else None
-                    log_type = "OUT" if previous_log_type == "IN" else "IN"
+                
+                log_time = datetime.strptime(formatted_timestamp, '%Y-%m-%d %H:%M:%S.%f')
+                day_start_time = log_time.replace(hour=2, minute=0, second=0, microsecond=0)
 
-                    logs_dict[employee_id] = {
-                        'timestamp': formatted_timestamp,
-                        'log_type': log_type
-                    }
+                if log_time >= day_start_time:
+                    if employee_id not in logs_dict or formatted_timestamp > logs_dict[employee_id]['timestamp']:
+                        previous_log_type = logs_dict[employee_id]['log_type'] if employee_id in logs_dict else None
+                        log_type = "OUT" if previous_log_type == "IN" else "IN"
+
+                        if not previous_log_type:
+                            log_type = "IN"  # First check-in after 2 AM should be "IN"
+
+                        logs_dict[employee_id] = {
+                            'timestamp': formatted_timestamp,
+                            'log_type': log_type
+                        }
             except ValueError as e:
                 frappe.msgprint(f"Timestamp format error: {e}")
                 print(f"Timestamp format error: {e}")
