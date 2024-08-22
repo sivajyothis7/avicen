@@ -1,18 +1,20 @@
 import frappe
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 @frappe.whitelist()
 def fetch_and_create_checkins():
-    yesterday = datetime.today().strftime('%Y-%m-%d')
-    
+    today = datetime.today()
+    yesterday = today - timedelta(days=1)
+    yesterday_str = yesterday.strftime('%Y-%m-%d')
+
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
     biometric_params = {
         "APIKey": "375211082407",
         "AccountName": "ALWANEES",
-        "FromDate": yesterday,
-        "ToDate": yesterday
+        "FromDate": yesterday_str,
+        "ToDate": yesterday_str
     }
 
     try:
@@ -43,17 +45,17 @@ def fetch_and_create_checkins():
         if employee_id and timestamp:
             try:
                 formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
-                
-                if employee_id in logs_dict:
-                    previous_log_type = logs_dict[employee_id]['log_type']
-                    log_type = "OUT" if previous_log_type == "IN" else "IN"
-                else:
-                    log_type = "IN"  # Default to IN for the first entry
+                if employee_id not in logs_dict or formatted_timestamp > logs_dict[employee_id]['timestamp']:
+                    # Fetch the last log type for the employee from the previous day
+                    previous_log = frappe.db.get_value("Employee Checkin", {"employee_field_value": employee_id, "time": ["<", today.strftime('%Y-%m-%d %H:%M:%S.000000')]}, ["log_type"], order_by="time desc")
+                    previous_log_type = previous_log if previous_log else None
 
-                logs_dict[employee_id] = {
-                    'timestamp': formatted_timestamp,
-                    'log_type': log_type
-                }
+                    log_type = "OUT" if previous_log_type == "IN" else "IN"
+
+                    logs_dict[employee_id] = {
+                        'timestamp': formatted_timestamp,
+                        'log_type': log_type
+                    }
             except ValueError as e:
                 frappe.msgprint(f"Timestamp format error: {e}")
                 print(f"Timestamp format error: {e}")
