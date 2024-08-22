@@ -47,8 +47,8 @@ def fetch_and_create_checkins():
                 if employee_id in logs_dict:
                     previous_log_type = logs_dict[employee_id]['log_type']
                     log_type = "OUT" if previous_log_type == "IN" else "IN"
-                else:
-                    log_type = "IN"  # Default to IN for the first entry
+                # else:
+                #     log_type = "IN"  # Default to IN for the first entry
 
                 logs_dict[employee_id] = {
                     'timestamp': formatted_timestamp,
