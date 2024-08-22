@@ -5,10 +5,9 @@ from datetime import datetime, timedelta
 
 @frappe.whitelist()
 def fetch_and_create_checkins():
-    # Calculate from 2 AM the previous day to 1:59:59 AM today
-    yesterday = datetime.today() - timedelta(days=1)
-    from_date = yesterday.replace(hour=2, minute=0, second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S')
-    to_date = yesterday.replace(hour=1, minute=59, second=59, microsecond=0) + timedelta(days=1)
+    today = datetime.today()
+    from_date = today.replace(hour=2, minute=0, second=0, microsecond=0).strftime('%Y-%m-%dT%H:%M:%S')
+    to_date = today.replace(hour=1, minute=59, second=59, microsecond=0) + timedelta(days=1)
     to_date = to_date.strftime('%Y-%m-%dT%H:%M:%S')
 
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
