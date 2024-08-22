@@ -6,7 +6,7 @@ from datetime import datetime
 @frappe.whitelist()
 def fetch_and_create_checkins():
     yesterday = datetime.today().strftime('%Y-%m-%d')
-
+    
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
     biometric_params = {
         "APIKey": "375211082407",
@@ -43,15 +43,12 @@ def fetch_and_create_checkins():
         if employee_id and timestamp:
             try:
                 formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
-
-                # Fetch the last log type from the previous entries if it's the first log of the day
-                if employee_id not in logs_dict:
-                    last_log = frappe.db.get_value("Employee Checkin", {"employee": employee_id}, "log_type", order_by="time desc")
-                    previous_log_type = last_log if last_log else None
-                else:
+                
+                if employee_id in logs_dict:
                     previous_log_type = logs_dict[employee_id]['log_type']
-
-                log_type = "OUT" if previous_log_type == "IN" else "IN"
+                    log_type = "OUT" if previous_log_type == "IN" else "IN"
+                else:
+                    log_type = "IN"  # Default to IN for the first entry
 
                 logs_dict[employee_id] = {
                     'timestamp': formatted_timestamp,
@@ -67,7 +64,7 @@ def fetch_and_create_checkins():
         log_type = log_info['log_type']
 
         existing_log = frappe.db.exists("Employee Checkin", {
-            "employee": employee_id,
+            "employee_field_value": employee_id,
             "time": formatted_timestamp
         })
 
@@ -77,7 +74,7 @@ def fetch_and_create_checkins():
             continue
 
         payload = {
-            "employee": employee_id,
+            "employee_field_value": employee_id,
             "timestamp": formatted_timestamp,
             "employee_fieldname": "attendance_device_id",
             "log_type": log_type
