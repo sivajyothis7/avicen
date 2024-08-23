@@ -51,8 +51,8 @@ def fetch_and_create_checkins():
                 else:
                     if log_datetime.time() > time(2, 0):  
                         log_type = "IN"
-                    else:
-                        log_type = "OUT"
+                    # else:
+                    #     log_type = "OUT"
 
                 logs_dict[employee_id] = {
                     'timestamp': formatted_timestamp,
