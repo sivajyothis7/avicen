@@ -1,7 +1,7 @@
 import frappe
 import requests
 import json
-from datetime import datetime
+from datetime import datetime, time
 
 @frappe.whitelist()
 def fetch_and_create_checkins():
@@ -42,13 +42,17 @@ def fetch_and_create_checkins():
         timestamp = log.get("LogDate")
         if employee_id and timestamp:
             try:
-                formatted_timestamp = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S").strftime('%Y-%m-%d %H:%M:%S.000000')
-                
+                log_datetime = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
+                formatted_timestamp = log_datetime.strftime('%Y-%m-%d %H:%M:%S.000000')
+
                 if employee_id in logs_dict:
                     previous_log_type = logs_dict[employee_id]['log_type']
                     log_type = "OUT" if previous_log_type == "IN" else "IN"
                 else:
-                    log_type = "IN"  
+                    if log_datetime.time() < time(2, 0):  
+                        log_type = "OUT"
+                    else:
+                        log_type = "IN"
 
                 logs_dict[employee_id] = {
                     'timestamp': formatted_timestamp,
