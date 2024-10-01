@@ -4,9 +4,9 @@ import json
 from datetime import datetime, time
 
 @frappe.whitelist()
-def fetch_and_create_checkins():
-    from_date = "2024-08-01"  # Starting from August 1, 2024
-    to_date = datetime.today().strftime('%Y-%m-%d')  # Today's date
+def fetch_and_create_checkins(from_date="2024-08-01", to_date=None):
+    if not to_date:
+        to_date = datetime.today().strftime('%Y-%m-%d')
 
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
     biometric_params = {
@@ -20,11 +20,11 @@ def fetch_and_create_checkins():
         response = requests.get(biometric_url, params=biometric_params)
         response.raise_for_status()
         data = response.json()
-        frappe.msgprint("Biometric data fetched successfully")
-        print("Biometric data fetched successfully:", data)
+        frappe.msgprint(f"Biometric data fetched successfully from {from_date} to {to_date}")
+        print(f"Biometric data fetched successfully from {from_date} to {to_date}: {data}")
     except requests.exceptions.RequestException as e:
         frappe.throw(f"Failed to fetch biometric data. Error: {e}")
-        print("Failed to fetch biometric data. Error:", e)
+        print(f"Failed to fetch biometric data. Error: {e}")
         return
 
     if isinstance(data, dict) and "Logs" in data:
@@ -60,8 +60,8 @@ def fetch_and_create_checkins():
                     'log_type': log_type
                 }
             except ValueError as e:
-                frappe.msgprint(f"Timestamp format error: {e}")
-                print(f"Timestamp format error: {e}")
+                frappe.msgprint(f"Timestamp format error for EmployeeID: {employee_id}. Error: {e}")
+                print(f"Timestamp format error for EmployeeID: {employee_id}. Error: {e}")
                 continue
 
     for employee_id, log_info in logs_dict.items():
