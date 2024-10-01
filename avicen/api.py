@@ -13,7 +13,7 @@ def fetch_and_create_checkins():
     biometric_params = {
         "APIKey": "375211082407",
         "AccountName": "ALWANEES",
-        "FromDate": from_date,
+        "FromDate": "2024-08-01",
         "ToDate": to_date
     }
 
