@@ -5,15 +5,14 @@ from datetime import datetime, time
 
 @frappe.whitelist()
 def fetch_and_create_checkins():
-    from_date = datetime(2024, 8, 1).strftime('%Y-%m-%d') 
-    to_date = datetime.today().strftime('%Y-%m-%d') 
-
+    yesterday = datetime.today().strftime('%Y-%m-%d')
+    
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
     biometric_params = {
         "APIKey": "375211082407",
         "AccountName": "ALWANEES",
-        "FromDate": from_date,
-        "ToDate": to_date
+        "FromDate": yesterday,
+        "ToDate": yesterday
     }
 
     try:
