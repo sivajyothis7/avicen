@@ -6,7 +6,7 @@ from datetime import datetime, time
 @frappe.whitelist()
 def fetch_and_create_checkins():
     # Set the start date for fetching the data
-    from_date = "2024-08-01"  # Change this to the desired start date
+    from_date = datetime(2024, 8, 1).strftime('%Y-%m-%d')  # Change this to the desired start date
     to_date = datetime.today().strftime('%Y-%m-%d')  # Current date or any end date
 
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
