@@ -156,7 +156,7 @@ app_include_js = "/assets/avicen/js/custom_workspace.js"
 
 scheduler_events = {
     "cron": {
-        "*/2 * * * *": [
+        "*/3 * * * *": [
             "avicen.api.fetch_and_create_checkins"
         ]
     }
