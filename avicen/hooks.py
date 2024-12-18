@@ -12,6 +12,8 @@ app_license = "mit"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/avicen/css/avicen.css"
 # app_include_js = "/assets/avicen/js/avicen.js"
+# app_include_js = "/assets/avicen/js/custom_workspace.js"
+
 
 # include js, css files in header of web template
 # web_include_css = "/assets/avicen/css/avicen.css"
@@ -237,3 +239,4 @@ scheduler_events = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
 
+fixtures= ["Property Setter"]
