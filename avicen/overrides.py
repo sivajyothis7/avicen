@@ -1,4 +1,5 @@
 import frappe
+from frappe import _
 from hrms.hr.doctype.employee_checkin.employee_checkin import EmployeeCheckin
 
 class CustomEmployeeCheckin(EmployeeCheckin):
@@ -6,12 +7,14 @@ class CustomEmployeeCheckin(EmployeeCheckin):
         if not frappe.db.get_single_value("HR Settings", "allow_geolocation_tracking"):
             return
 
+        # Allow missing latitude and longitude
         if not (self.latitude or self.longitude):
             frappe.msgprint(
                 _("Latitude and longitude values are missing, but check-in will proceed.")
             )
             return
 
+        # Continue with assignment location checks
         assignment_locations = frappe.get_all(
             "Shift Assignment",
             filters={
@@ -36,6 +39,5 @@ class CustomEmployeeCheckin(EmployeeCheckin):
         distance = get_distance_between_coordinates(latitude, longitude, self.latitude, self.longitude)
         if distance > checkin_radius:
             frappe.throw(
-                _("You must be within {0} meters of your shift location to check in.").format(checkin_radius),
-                exc=CheckinRadiusExceededError,
+                _("You must be within {0} meters of your shift location to check in.").format(checkin_radius)
             )
