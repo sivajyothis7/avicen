@@ -119,10 +119,14 @@ app_include_js = "/assets/avicen/js/custom_workspace.js"
 # override_doctype_class = {
 # 	"ToDo": "custom_app.overrides.CustomToDo"
 # }
-override_doctype_class = {
-    "Employee Checkin": "avicen.overrides.CustomEmployeeCheckin"
-}
+# override_doctype_class = {
+#     "Employee Checkin": "avicen.overrides.CustomEmployeeCheckin"
+# }
 
+override_doctype_class = {
+    "Employee Checkin": "avicen.overrides.CustomEmployeeCheckin",
+    "Shift Request": "avicen.overrides.CustomShiftRequest"
+}
 
 # Document Events
 # ---------------
@@ -161,7 +165,7 @@ override_doctype_class = {
 scheduler_events = {
     "cron": {
         "*/2 * * * *": [
-            "avicen.api.fetch_and_create_checkins"
+            "avicen.test.fetch_and_create_checkins"
         ]
     }
 }

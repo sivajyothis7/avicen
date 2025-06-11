@@ -102,3 +102,79 @@ def fetch_and_create_checkins():
 
     print("Process completed.")
     frappe.msgprint("Process completed.")
+
+
+# import frappe
+# import requests
+# import json
+# from datetime import datetime
+
+# zkteco_url = "http://fidu.dyndns.org:8081/iclock/api/transactions/"
+
+# erp_url = "http://127.0.0.1:8006"
+# api_key = "7659804d9abbc47"
+# api_secret = "3f226f85d2c0b42"
+# erp_headers = {
+#     "Authorization": f"token {api_key}:{api_secret}",
+#     "Content-Type": "application/json"
+# }
+
+# @frappe.whitelist()
+# def fetch_and_create_checkins():
+#     page = 1 
+    
+#     today = datetime.today()
+#     start_time = today.strftime("%Y-%m-%d 00:00:00")  
+#     end_time = today.strftime("%Y-%m-%d 23:59:59")  
+
+#     while True:
+#         zkteco_api_url = f"{zkteco_url}?start_time={start_time}&end_time={end_time}&page={page}"
+
+#         response = requests.get(zkteco_api_url, headers={"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzM0NzYxNzI3LCJpYXQiOjE3MzQ2NzUzMjcsImp0aSI6ImMyNWMzYTM3MDdmNjQ2NmFiMWUzZjMyMTBkNzA3MGZiIiwidXNlcl9pZCI6MX0.IeizsFkMiWmySNEnHxYYNsGRRyPFMnmAVv-DmPCdxac"})
+#         response.raise_for_status()
+#         data = response.json()
+        
+#         if data['code'] != 0:  
+#             frappe.throw(f"Failed to fetch data. Error code: {data['code']}")
+#             return
+
+#         for transaction in data['data']:
+#             employee_id = transaction['emp_code']
+#             punch_time = transaction['punch_time']
+#             punch_state_display = transaction['punch_state_display']
+
+#             try:
+#                 log_datetime = datetime.strptime(punch_time, "%Y-%m-%d %H:%M:%S")
+#                 formatted_time = log_datetime.strftime('%Y-%m-%d %H:%M:%S.000000')
+#             except ValueError as e:
+#                 frappe.msgprint(f"Timestamp format error: {e}")
+#                 continue
+
+#             log_type = "IN" if punch_state_display == "Check In" else "OUT"
+
+#             payload = {
+#                 "employee_field_value": employee_id,
+#                 "timestamp": formatted_time,
+#                 "employee_fieldname": "attendance_device_id",  
+#                 "log_type": log_type
+#             }
+
+#             try:
+#                 frappe_response = requests.post(
+#                     f"{erp_url}/api/method/hrms.hr.doctype.employee_checkin.employee_checkin.add_log_based_on_employee_field",
+#                     headers=erp_headers,
+#                     data=json.dumps(payload)
+#                 )
+#                 frappe_response.raise_for_status()
+#                 frappe.msgprint(f"Employee Checkin created successfully for EmployeeID: {employee_id}")
+#             except requests.exceptions.RequestException as e:
+#                 frappe.msgprint(f"Failed to create Employee Checkin for EmployeeID: {employee_id}. Error: {e}")
+#                 continue
+
+#         if data.get('next'):
+#             page += 1
+#         else:
+#             break 
+
+#     frappe.msgprint("Process completed.")
+#     print("Process completed.")
