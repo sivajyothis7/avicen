@@ -165,7 +165,7 @@ override_doctype_class = {
 scheduler_events = {
     "cron": {
         "*/2 * * * *": [
-            "avicen.test.fetch_and_create_checkins"
+            "avicen.api.fetch_and_create_checkins"
         ]
     }
 }
