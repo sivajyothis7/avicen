@@ -113,11 +113,8 @@ from datetime import datetime, time
 @frappe.whitelist()
 def fetch_and_create_checkins():
     dates_to_fetch = [
-        "2024-06-12",
-        "2024-06-13",
-        "2024-06-14",
-        "2024-06-15"
-    ]
+        "2024-06-12"
+   ]
 
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
     
