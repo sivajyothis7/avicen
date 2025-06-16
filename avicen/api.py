@@ -120,7 +120,7 @@ def fetch_and_create_checkins():
     ]
 
     biometric_url = "https://so365.in/SmartApp_ess/api/SwipeDetails/GetDeviceLogs"
-    
+
     for target_date in dates_to_fetch:
         frappe.msgprint(f"Fetching data for {target_date}")
 
@@ -149,66 +149,79 @@ def fetch_and_create_checkins():
             print("Unexpected response format:", data)
             return
 
+        # Dictionary to hold all logs grouped by employee
         logs_dict = {}
 
         for log in logs:
             employee_id = log.get("UserId")
             timestamp = log.get("LogDate")
+
             if employee_id and timestamp:
                 try:
                     log_datetime = datetime.strptime(timestamp, "%Y-%m-%dT%H:%M:%S")
                     formatted_timestamp = log_datetime.strftime('%Y-%m-%d %H:%M:%S.000000')
 
-                    if employee_id in logs_dict:
-                        previous_log_type = logs_dict[employee_id]['log_type']
-                        log_type = "OUT" if previous_log_type == "IN" else "IN"
-                    else:
-                        log_type = "OUT" if log_datetime.time() < time(3, 0) else "IN"
+                    # Determine initial log type based on time
+                    log_type = "OUT" if log_datetime.time() < time(3, 0) else "IN"
 
-                    logs_dict[employee_id] = {
+                    if employee_id not in logs_dict:
+                        logs_dict[employee_id] = []
+
+                    logs_dict[employee_id].append({
                         'timestamp': formatted_timestamp,
+                        'datetime': log_datetime,  # Keep datetime for sorting
                         'log_type': log_type
-                    }
+                    })
+
                 except ValueError as e:
                     frappe.msgprint(f"Timestamp format error for {timestamp}: {e}")
                     continue
 
-        for employee_id, log_info in logs_dict.items():
-            formatted_timestamp = log_info['timestamp']
-            log_type = log_info['log_type']
+        # Sort and assign alternating IN/OUT log types
+        for employee_id, entries in logs_dict.items():
+            entries.sort(key=lambda x: x['datetime'])  # Sort by datetime
+            for idx, entry in enumerate(entries):
+                entry['log_type'] = 'IN' if idx % 2 == 0 else 'OUT'
 
-            existing_log = frappe.db.exists("Employee Checkin", {
-                "employee_field_value": employee_id,
-                "time": formatted_timestamp
-            })
+        # Create checkins
+        for employee_id, log_entries in logs_dict.items():
+            for log_info in log_entries:
+                formatted_timestamp = log_info['timestamp']
+                log_type = log_info['log_type']
 
-            if existing_log:
-                print(f"Duplicate log found for {employee_id} at {formatted_timestamp}. Skipping.")
-                continue
+                existing_log = frappe.db.exists("Employee Checkin", {
+                    "employee_field_value": employee_id,
+                    "time": formatted_timestamp
+                })
 
-            payload = {
-                "employee_field_value": employee_id,
-                "timestamp": formatted_timestamp,
-                "employee_fieldname": "attendance_device_id",
-                "log_type": log_type
-            }
+                if existing_log:
+                    print(f"Duplicate log found for {employee_id} at {formatted_timestamp}. Skipping.")
+                    continue
 
-            try:
-                frappe_response = requests.post(
-                    "https://avicen.enfono.com/api/method/hrms.hr.doctype.employee_checkin.employee_checkin.add_log_based_on_employee_field",
-                    headers={
-                        "Authorization": "token 563e54570e4420e:0cefeae0e1dc516",
-                        "Content-Type": "application/json"
-                    },
-                    data=json.dumps(payload),
-                )
-                frappe_response.raise_for_status()
-                print(f"Checkin created for {employee_id} at {formatted_timestamp}")
-            except requests.exceptions.RequestException as e:
-                print(f"Failed to create Checkin for {employee_id} at {formatted_timestamp}. Error: {e}")
+                payload = {
+                    "employee_field_value": employee_id,
+                    "timestamp": formatted_timestamp,
+                    "employee_fieldname": "attendance_device_id",
+                    "log_type": log_type
+                }
+
+                try:
+                    frappe_response = requests.post(
+                        "https://avicen.enfono.com/api/method/hrms.hr.doctype.employee_checkin.employee_checkin.add_log_based_on_employee_field",
+                        headers={
+                            "Authorization": "token 563e54570e4420e:0cefeae0e1dc516",
+                            "Content-Type": "application/json"
+                        },
+                        data=json.dumps(payload),
+                    )
+                    frappe_response.raise_for_status()
+                    print(f"Checkin created for {employee_id} at {formatted_timestamp}")
+                except requests.exceptions.RequestException as e:
+                    print(f"Failed to create Checkin for {employee_id} at {formatted_timestamp}. Error: {e}")
 
     print("All dates processed.")
     frappe.msgprint("Biometric import completed for June 12, 13, 14, and 15.")
+
 # import frappe
 # import requests
 # import json
